@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch-the-Karana | Bank Forensic Audit Simulator</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --gold: #f59e0b;
+      --gold-hover: #d97706;
+      --red: #ef4444;
+      --green: #10b981;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1050px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      color: var(--gold);
+    }
+
+    .header p {
+      margin: 4px 0 0 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+    }
+
+    .stat-badge {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-badge .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .stat-badge .value {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--gold);
+    }
+
+    .progress-tracker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      background: rgba(15, 23, 42, 0.4);
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .stage-pill {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .stage-pill.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .stage-pill.completed {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+      color: var(--text-main);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .doc-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .doc-card .title {
+      font-weight: bold;
+      color: var(--gold);
+      margin-bottom: 8px;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 4px;
+    }
+
+    .doc-field {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .doc-field span.val {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .narrative-text {
+      font-size: 0.88rem;
+      line-height: 1.4;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+      background: #0f172a;
+      padding: 10px;
+      border-left: 3px solid var(--gold);
+      border-radius: 4px;
+    }
+
+    .action-group {
+      margin-top: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+
+    button.btn-primary {
+      background: var(--gold);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    button.btn-primary:hover:not(:disabled) {
+      background: var(--gold-hover);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.btn-next {
+      background: var(--green);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    .feedback-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    .feedback-box.correct {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--green);
+      color: #6ee7b7;
+    }
+
+    .feedback-box.incorrect {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--red);
+      color: #fca5a5;
+    }
+
+    .kautilya-note {
+      margin-top: 8px;
+      font-style: italic;
+      font-size: 0.82rem;
+      opacity: 0.95;
+      border-top: 1px dotted rgba(255,255,255,0.2);
+      padding-top: 6px;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header & Scoreboard -->
+  <div class="header">
+    <div>
+      <h1>Catch-the-Karana</h1>
+      <p>Bank Forensic Audit Simulator | Arthashastra Embezzlement Audit Rules</p>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-badge">
+        <div class="label">Story Cases Solved</div>
+        <div class="value" id="caseScore">0 / 10</div>
+      </div>
+      <div class="stat-badge">
+        <div class="label">Treasury Fines (Danda)</div>
+        <div class="value" id="fineCount">0 Pana</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Pills -->
+  <div class="progress-tracker">
+    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold;">STORY CASE <span id="caseNumDisplay">1</span> PROGRESS:</span>
+    <div class="stage-pill active" id="pill1">Stage 1: Origin</div>
+    <div class="stage-pill" id="pill2">Stage 2: Escalation</div>
+    <div class="stage-pill" id="pill3">Stage 3: Cover-up</div>
+  </div>
+
+  <!-- Main Game Arena -->
+  <div class="workspace" id="gameArena">
+    <!-- Left Panel: Transaction Inspection -->
+    <div class="panel">
+      <h2>Inspection Ledger (<span id="storyTitleDisplay">Loading...</span>)</h2>
+      <div class="narrative-text" id="narrativeContainer">
+        <!-- Story text -->
+      </div>
+      <div id="documentContainer">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- Right Panel: Audit Controls -->
+    <div class="panel">
+      <h2>Akshapatala Audit Finding</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Examine the record carefully. Once a correct finding is issued for this stage, it is locked into the court register.
+      </p>
+
+      <div class="action-group">
+        <label for="anomalySelect">Identify Fraud Category (AS 2.8 / Modern Audit):</label>
+        <select id="anomalySelect">
+          <option value="">-- Select Audit Flag --</option>
+          <option value="sod">1. Segregation of Duties Breach (Samaharta Override)</option>
+          <option value="vyaji">2. Unauthorized Trade Margin / Spread Skimming (Vyaji)</option>
+          <option value="phantom">3. Shell Company / Fictitious Vendor Payment</option>
+          <option value="lapping">4. Teeming and Lading / Receivable Lapping (Prakriya)</option>
+          <option value="backdate">5. Chronological / Cutoff Date Shifting (Kala-harana)</option>
+          <option value="baddebt">6. Fraudulent Bad Debt Write-off (Siddha-Sadhyam)</option>
+          <option value="unrecorded">7. Suppression of Off-the-Books Receipts (Upagrhanasya)</option>
+          <option value="double_inv">8. Duplicate Invoicing / Multiple Payouts (Dvir-ukta)</option>
+          <option value="ghost_emp">9. Ghost Employee / Payroll Siphoning (Anugrahita)</option>
+          <option value="kiting">10. Cheque Kiting / Inter-Branch Float Exploitation</option>
+          <option value="kickback">11. Kickback & Purchase Price Padding (Lekha-hrta)</option>
+          <option value="asset_strip">12. Unauthorized Asset Derecognition (Samyavaharika)</option>
+        </select>
+
+        <button class="btn-primary" id="submitBtn" onclick="submitAudit()">Issue Audit Finding</button>
+        <button class="btn-next hidden" id="nextStageBtn" onclick="advanceStage()">Advance to Next Stage</button>
+      </div>
+
+      <!-- Feedback Area -->
+      <div id="feedbackBox" class="feedback-box">
+        <div id="feedbackTitle" style="font-weight: bold; margin-bottom: 4px;"></div>
+        <div id="feedbackText"></div>
+        <div id="kautilyaNote" class="kautilya-note"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completion Screen -->
+  <div id="endScreen" class="panel hidden" style="text-align: center; padding: 40px;">
+    <h2 style="color: var(--gold); font-size: 1.8rem;">Master Akshapatala Audit Complete</h2>
+    <p style="font-size: 1.05rem; margin: 20px 0;">
+      You have dismantled all 10 multi-stage bank embezzlement networks across the Mauryan financial realm.
+    </p>
+    <div style="font-size: 1.4rem; margin-bottom: 30px;">
+      Total Recoveries & Penalties (*Danda*): <strong id="finalFines" style="color: var(--green);">0 Pana</strong>
+    </div>
+    <button class="btn-primary" style="width: 250px;" onclick="resetGame()">Start New Master Audit Shift</button>
+  </div>
+</div>
+
+<script>
+  // 10 Story Cases with 3 Sequential Stages Each
+  const storyCases = [
+    {
+      title: "Case I: The Silk Route Trade Syndicate",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: A foreign merchant requests import credit for silk shipments. The branch manager executes the trade deal independently.",
+          docs: [
+            { label: "Facility", val: "Silk Import Letter of Credit #8801" },
+            { label: "Principal Amount", val: "100,000 Pana" },
+            { label: "Initiating Officer", val: "A. Vardhan (Branch Mgr)" },
+            { label: "Approving Officer", val: "A. Vardhan (Branch Mgr)" },
+            { label: "Vault Release", val: "Executed directly by A. Vardhan" }
+          ],
+          type: "sod",
+          amount: 100000,
+          correctText: "Segregation of Duties Breach! The manager initiated, approved, and disbursed funds single-handedly.",
+          kautilyaText: "AS 2.9: The Samaharta (Authorizer) must never exercise physical custody (Sannidhata) over disbursements."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: To profit privately from the silk credit line, the clerk adds an unapproved surcharge on foreign exchange conversion.",
+          docs: [
+            { label: "Settlement Invoice", val: "FX Exchange Settlement #8802" },
+            { label: "Contracted Spread Limit", val: "3.0%" },
+            { label: "Actual Spread Billed", val: "7.5%" },
+            { label: "Defrauded Spread Value", val: "20,000 Pana" },
+            { label: "Routing", val: "Private Sub-ledger" }
+          ],
+          type: "vyaji",
+          amount: 20000,
+          correctText: "Unauthorized Spread Skimming (Vyaji)! Billed exchange markup (7.5%) exceeded the 3% statutory limit.",
+          kautilyaText: "AS 2.6 & 2.8: Capped exchange markups belong to the state treasury; unauthorized private markups constitute theft of yield."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: As auditors approach, the manager attempts to mask the missing 20,000 Pana spread by backdating ledger entries across quarters.",
+          docs: [
+            { label: "Quarterly Audit Ledger", val: "Q1 Financial Closing Log" },
+            { label: "Actual Event Date", val: "April 12 (Q2)" },
+            { label: "System Record Date", val: "March 31 (Backdated to Q1)" },
+            { label: "Defrauded Amount", val: "50,000 Pana" }
+          ],
+          type: "backdate",
+          amount: 50000,
+          correctText: "Cutoff Date Shifting! Entries were artificially backdated to hide quarterly provision deficits.",
+          kautilyaText: "AS 2.8 (Kala-harana): Altering transaction dates across financial periods to falsify state rolls is severely penalized."
+        }
+      ]
+    },
+    {
+      title: "Case II: The Royal Granary Procurement Scandal",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: A procurement officer awards a supply contract to a newly listed equipment vendor lacking official credentials.",
+          docs: [
+            { label: "Voucher #", val: "DISB-9012" },
+            { label: "Vendor Name", val: "Champa Supply Enterprise" },
+            { label: "Tax / Registry ID", val: "UNVERIFIED / BLANK" },
+            { label: "Disbursement", val: "60,000 Pana" }
+          ],
+          type: "phantom",
+          amount: 60000,
+          correctText: "Phantom Vendor Disbursement! Funds were transferred to an unverified entity without valid registry.",
+          kautilyaText: "AS 2.8 (Nirbhukta): Disbursing public funds to unlisted, unverified counterparties is direct embezzlement."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: To extract even more funds, the procurement agent re-submits the exact same vendor invoice 30 days later.",
+          docs: [
+            { label: "Invoice #", val: "INV-CHAMPA-9012" },
+            { label: "Billed Amount", val: "60,000 Pana" },
+            { label: "Payment History", val: "Identical invoice paid on Day 1" },
+            { label: "Executing Clerk", val: "P. Rangan" }
+          ],
+          type: "double_inv",
+          amount: 60000,
+          correctText: "Duplicate Invoicing! Re-submitting a previously paid invoice to draw double funds.",
+          kautilyaText: "AS 2.8 (Dvir-ukta): Recording and disbursing treasury payment twice for a single obligation."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: When caught with double payouts, the agent claims the extra funds were paid as secret commissions to the supplier.",
+          docs: [
+            { label: "Purchase Order", val: "Granary Scale Contract" },
+            { label: "Market Price", val: "80,000 Pana" },
+            { label: "Billed Price", val: "120,000 Pana" },
+            { label: "Side Kickback Value", val: "40,000 Pana" }
+          ],
+          type: "kickback",
+          amount: 40000,
+          correctText: "Kickback & Purchase Price Padding! Vendor contracts were inflated to extract secret side rebates.",
+          kautilyaText: "AS 2.8 & 2.13 (Lekha-hrta): Taking secret rebates or collusion commissions damages treasury efficiency."
+        }
+      ]
+    },
+    {
+      title: "Case III: The Coastal Shipping Debenture Fraud",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: A teller collects cash loan repayments from shipmasters but diverts the money to cover overdue debts of favored clients.",
+          docs: [
+            { label: "Receipt #", val: "CASH-7701" },
+            { label: "Merchant Deposit", val: "30,000 Pana" },
+            { label: "Ledger Posting", val: "Credited to Overdue Account Y" },
+            { label: "Deposit Account Balance", val: "Unchanged / Overdue" }
+          ],
+          type: "lapping",
+          amount: 30000,
+          correctText: "Teeming & Lading (Lapping)! Cash collected was diverted to cover up stolen balances in another account.",
+          kautilyaText: "AS 2.8 (Prakriya): Shifting collections sequentially across accounts to mask missing treasury balances."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: When Account Y could no longer be covered by lapping, the loan officer simply marked the loan as an unrecoverable bad debt.",
+          docs: [
+            { label: "Account ID", val: "SHIP-LOAN-99" },
+            { label: "Actual Status", val: "30,000 Pana Collected in Cash" },
+            { label: "General Ledger Entry", val: "Written Off as Defaulted Bad Debt" },
+            { label: "Audit Log", val: "Cash missing from vault" }
+          ],
+          type: "baddebt",
+          amount: 30000,
+          correctText: "Fraudulent Bad Debt Write-off! Cash was collected from the client, pocketed, and written off as unrecoverable.",
+          kautilyaText: "AS 2.8 (Siddha-Sadhyam): Falsely reporting recoverable state debts as uncollectible losses to conceal private theft."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: To replace the missing vault balance entirely, the officer draws fake cheques across two inter-branch accounts to manipulate float.",
+          docs: [
+            { label: "Transfer Voucher", val: "FLOAT-4412" },
+            { label: "Drawing Branch", val: "Port Branch A (Insufficient Funds)" },
+            { label: "Deposit Branch", val: "Central City Branch B" },
+            { label: "Unbacked Credit Value", val: "100,000 Pana" }
+          ],
+          type: "kiting",
+          amount: 100000,
+          correctText: "Cheque Kiting! Exploiting clearing time across branch accounts to create fictitious paper credit.",
+          kautilyaText: "AS 2.8 (Rupa-siddha): Fabricating paper credit across treasury branches to conceal actual cash deficits."
+        }
+      ]
+    },
+    {
+      title: "Case IV: The Imperial Mint Vault Siphoning",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: Mint vault custodian collects vault storage fees in cash directly from merchants off-the-books.",
+          docs: [
+            { label: "Receipt Log", val: "Manual Voucher #33" },
+            { label: "Fees Collected", val: "15,000 Pana" },
+            { label: "Central Revenue Ledger", val: "NO ENTRY RECORDED" },
+            { label: "Vault Pass", val: "Issued manually" }
+          ],
+          type: "unrecorded",
+          amount: 15000,
+          correctText: "Suppression of Unrecorded Receipts! Cash fees were collected directly without entering main revenue books.",
+          kautilyaText: "AS 2.8 (Upagrhanasya): Collecting legitimate state dues off-the-books and omitting them from central rolls."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: The custodian retains a long-terminated mint worker on active payroll schedules to siphon salary payments.",
+          docs: [
+            { label: "Payroll ID", val: "EMP-MINT-402" },
+            { label: "Employee Name", val: "K. Somaiya (Assayer)" },
+            { label: "HR Status", val: "Resigned 8 Months Prior" },
+            { label: "Monthly Transfer", val: "8,000 Pana to Custodian Account" }
+          ],
+          type: "ghost_emp",
+          amount: 8000,
+          correctText: "Ghost Employee Fraud! Retaining a terminated worker on active payroll rolls and redirecting wage payouts.",
+          kautilyaText: "AS 2.8 (Anugrahita / Falsified Rolls): Maintaining non-existent names on state payment rolls."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: The custodian privately sells decommissioned silver assaying scales without derecognizing them from asset registers.",
+          docs: [
+            { label: "Fixed Asset ID", val: "MINT-EQUIP-80" },
+            { label: "Item", val: "High-Precision Silver Balances" },
+            { label: "Physical Status", val: "Missing / Sold to private smith" },
+            { label: "Proceeds Siphoned", val: "35,000 Pana" }
+          ],
+          type: "asset_strip",
+          amount: 35000,
+          correctText: "Unauthorized Asset Stripping! State-owned equipment was sold privately without updating capital registers.",
+          kautilyaText: "AS 2.8 (Samyavaharika): Selling or converting sovereign assets for private gain without updating central rolls."
+        }
+      ]
+    },
+    {
+      title: "Case V: The Southern Highway Toll Consortium",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: Toll supervisors collect transit charges from caravans but bypass central recording systems.",
+          docs: [
+            { label: "Highway Gate", val: "Southern Pass Gate #4" },
+            { label: "Cash Collections", val: "25,000 Pana" },
+            { label: "Ledger Roll", val: "Omitted from Daily Return" }
+          ],
+          type: "unrecorded",
+          amount: 25000,
+          correctText: "Suppression of Unrecorded Receipts! Toll revenue collected was omitted completely from official ledgers.",
+          kautilyaText: "AS 2.8 (Upagrhanasya): Diverting collected state dues before they reach central registers."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: To cover up missing balances during an audit, supervisors shift funds from incoming toll deposits to cover overdue toll accounts.",
+          docs: [
+            { label: "Deposit Voucher", val: "TOLL-DEFICIT-09" },
+            { label: "Caravan B Deposit", val: "25,000 Pana" },
+            { label: "Applied To", val: "Caravan A Overdue Deficit" }
+          ],
+          type: "lapping",
+          amount: 25000,
+          correctText: "Teeming & Lading (Lapping)! Diverting incoming receipts to cover prior stolen balances sequentially.",
+          kautilyaText: "AS 2.8 (Prakriya): Lapping collections across accounts to mask a persistent deficit."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: Supervisors pay fake maintenance invoices to a shell construction entity owned by their relative.",
+          docs: [
+            { label: "Disbursement", val: "Road Paving Repairs" },
+            { label: "Vendor", val: "Vindhya Contracting" },
+            { label: "Registry", val: "Unregistered Entity" },
+            { label: "Payout Value", val: "45,000 Pana" }
+          ],
+          type: "phantom",
+          amount: 45000,
+          correctText: "Phantom Vendor Payment! Paying unverified third-party entities with zero proof of service.",
+          kautilyaText: "AS 2.8 (Nirbhukta): Transferring state funds to fictitious entities."
+        }
+      ]
+    },
+    {
+      title: "Case VI: The Frontier Garrison Payroll Embezzlement",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: Garrison paymaster retains deserting soldiers on active payroll logs to collect their stipends.",
+          docs: [
+            { label: "Unit Roll", val: "3rd Frontier Guard" },
+            { label: "Soldiers Listed", val: "12 Deserters / Fallen" },
+            { label: "Monthly Stipend Siphoned", val: "18,000 Pana" }
+          ],
+          type: "ghost_emp",
+          amount: 18000,
+          correctText: "Ghost Employee Payroll Fraud! Retaining inactive personnel on state payroll rolls.",
+          kautilyaText: "AS 2.8 (Anugrahita): Maintaining fake names on official muster rolls."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: The paymaster awards weapon repair contracts at double market prices in exchange for side commissions.",
+          docs: [
+            { label: "Contract", val: "Armory Refurbishment" },
+            { label: "Billed Value", val: "70,000 Pana" },
+            { label: "Fair Price", val: "40,000 Pana" },
+            { label: "Kickback Value", val: "30,000 Pana" }
+          ],
+          type: "kickback",
+          amount: 30000,
+          correctText: "Kickback & Price Padding! Contract prices were inflated to extract private side commissions.",
+          kautilyaText: "AS 2.8 & 2.13: Accepting secret rebates from suppliers."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: Paymaster sells surplus garrison horses privately and removes them from the register as 'diseased losses.'",
+          docs: [
+            { label: "Livestock Roll", val: "Garrison Cavalry" },
+            { label: "Horses Sold", val: "15 Warhorses" },
+            { label: "Official Status", val: "Logged as Deceased" },
+            { label: "Proceeds Siphoned", val: "50,000 Pana" }
+          ],
+          type: "asset_strip",
+          amount: 50000,
+          correctText: "Unauthorized Asset Stripping! Selling state livestock privately while falsifying destruction logs.",
+          kautilyaText: "AS 2.8 (Samyavaharika): Converting sovereign assets for private gain."
+        }
+      ]
+    },
+    {
+      title: "Case VII: The State Iron Mines Capital Siphoning",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: Mining director approves major equipment purchase loans single-handedly without dual-director sign-off.",
+          docs: [
+            { label: "Facility", val: "Smelting Furnace Debenture" },
+            { label: "Amount", val: "200,000 Pana" },
+            { label: "Initiating Director", val: "U. Hegde" },
+            { label: "Approving Director", val: "U. Hegde" }
+          ],
+          type: "sod",
+          amount: 200000,
+          correctText: "Segregation of Duties Breach! Dual authorization was bypassed for major capital disbursements.",
+          kautilyaText: "AS 2.9: Separation of authorizer and executor domains."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: The director adds unauthorized financing markup fees on raw ore loans extended to private foundries.",
+          docs: [
+            { label: "Loan Spread Limit", val: "4.0%" },
+            { label: "Billed Spread", val: "9.0%" },
+            { label: "Siphoned Yield", val: "40,000 Pana" }
+          ],
+          type: "vyaji",
+          amount: 40000,
+          correctText: "Unauthorized Spread Skimming (Vyaji)! Inflating financing spreads beyond statutory caps.",
+          kautilyaText: "AS 2.6 & 2.8: Unapproved transaction markups belong to the state treasury."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: The director backdates furnace overhaul logs across fiscal years to hide budget overruns.",
+          docs: [
+            { label: "Audit Ledger", val: "FY Closing Log" },
+            { label: "Event Date", val: "April 10" },
+            { label: "System Entry Date", val: "March 25 (Backdated)" },
+            { label: "Manipulated Amount", val: "80,000 Pana" }
+          ],
+          type: "backdate",
+          amount: 80000,
+          correctText: "Cutoff Date Shifting! Backdating transaction logs to misrepresent fiscal performance.",
+          kautilyaText: "AS 2.8 (Kala-harana): Altering transaction dates across financial reporting periods."
+        }
+      ]
+    },
+    {
+      title: "Case VIII: The Royal Elephant Corps Procurement",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: Fodder supply invoices are re-submitted twice within 15 days to trigger double payouts.",
+          docs: [
+            { label: "Invoice #", val: "ELE-FODDER-101" },
+            { label: "Amount", val: "35,000 Pana" },
+            { label: "History", val: "Previously settled on 1st of month" }
+          ],
+          type: "double_inv",
+          amount: 35000,
+          correctText: "Duplicate Invoicing! Submitting paid invoices twice to draw double treasury payouts.",
+          kautilyaText: "AS 2.8 (Dvir-ukta): Disbursing payments twice for a single obligation."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: Procurement officer transfers armor supply payments to an unverified entity in a neighboring kingdom.",
+          docs: [
+            { label: "Payee", val: "Kalinga Armor Works" },
+            { label: "Registry", val: "Unverified / Foreign Shell" },
+            { label: "Payment Value", val: "65,000 Pana" }
+          ],
+          type: "phantom",
+          amount: 65000,
+          correctText: "Phantom Vendor Disbursement! Transferring state funds to unlisted foreign shell entities.",
+          kautilyaText: "AS 2.8 (Nirbhukta): Disbursing funds to unlisted third parties."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: The officer writes off recoverable elephant leasing fees owed by wealthy nobles as 'bad debts.'",
+          docs: [
+            { label: "Noble Account", val: "Lord Bimbisara Lease" },
+            { label: "Cash Collected", val: "50,000 Pana (Pocketed)" },
+            { label: "Ledger Record", val: "Marked as Uncollectible Debt" }
+          ],
+          type: "baddebt",
+          amount: 50000,
+          correctText: "Fraudulent Bad Debt Write-off! Collecting lease cash secretly while recording default losses.",
+          kautilyaText: "AS 2.8 (Siddha-Sadhyam): Falsely reporting recoverable debts as uncollectible losses."
+        }
+      ]
+    },
+    {
+      title: "Case IX: The River Port Customs Syndicate",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: Customs officer collects river vessel docking tariffs in cash without logging entry slips.",
+          docs: [
+            { label: "Port Pass", val: "Vessel Entry #502" },
+            { label: "Tariff Collected", val: "22,000 Pana" },
+            { label: "Central Ledger", val: "NOT RECORDED" }
+          ],
+          type: "unrecorded",
+          amount: 22000,
+          correctText: "Suppression of Unrecorded Receipts! Collecting state tariffs off-the-books.",
+          kautilyaText: "AS 2.8 (Upagrhanasya): Omitting collected state dues from official ledgers."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: Officer draws fake credit vouchers across port branches to create fictitious cash reserves.",
+          docs: [
+            { label: "Credit Voucher", val: "PORT-FLOAT-88" },
+            { label: "Drawing Branch", val: "Upstream Port (No Funds)" },
+            { label: "Deposit Branch", val: "Delta Port" },
+            { label: "Fictitious Credit", val: "90,000 Pana" }
+          ],
+          type: "kiting",
+          amount: 90000,
+          correctText: "Cheque Kiting! Exploiting clearing float across port branches to artificially inflate credit.",
+          kautilyaText: "AS 2.8 (Rupa-siddha): Fabricating paper credit across treasury branches."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: Officer inflates warehouse construction contracts to split a 40,000 Pana kickback with the builder.",
+          docs: [
+            { label: "Warehouse Contract", val: "Granary Wharf #2" },
+            { label: "Billed", val: "150,000 Pana" },
+            { label: "Fair Cost", val: "110,000 Pana" },
+            { label: "Kickback", val: "40,000 Pana" }
+          ],
+          type: "kickback",
+          amount: 40000,
+          correctText: "Kickback & Price Padding! Contract prices were inflated in exchange for side commissions.",
+          kautilyaText: "AS 2.8 & 2.13: Taking secret rebates from contractors."
+        }
+      ]
+    },
+    {
+      title: "Case X: The Central Agricultural Bank Defalcation",
+      stages: [
+        {
+          stageNum: 1,
+          narrative: "Stage 1: Bank manager initiates and disburses a massive seasonal crop credit line without regional director clearance.",
+          docs: [
+            { label: "Credit Facility", val: "Monsoon Crop Debenture" },
+            { label: "Principal", val: "300,000 Pana" },
+            { label: "Sole Approver", val: "S. Mahapatra (Branch Mgr)" }
+          ],
+          type: "sod",
+          amount: 300000,
+          correctText: "Segregation of Duties Breach! Executing major credit lines single-handedly without dual approval.",
+          kautilyaText: "AS 2.9: Separation of authorizer and custodian roles."
+        },
+        {
+          stageNum: 2,
+          narrative: "Stage 2: Manager diverts incoming farmer repayments to cover up stolen funds from prior loan accounts.",
+          docs: [
+            { label: "Repayment Deposit", val: "50,000 Pana Cash" },
+            { label: "Applied To", val: "Covering missing balance in Account Z" },
+            { label: "Farmer Ledger", val: "Shows Unpaid Balance" }
+          ],
+          type: "lapping",
+          amount: 50000,
+          correctText: "Teeming & Lading (Lapping)! Diverting current collections sequentially to cover prior deficits.",
+          kautilyaText: "AS 2.8 (Prakriya): Lapping collections across accounts to mask stolen balances."
+        },
+        {
+          stageNum: 3,
+          narrative: "Stage 3: Manager backdates loan loss provisioning entries to hide insolvency during the annual audit.",
+          docs: [
+            { label: "Provisioning Log", val: "Annual Audit Return" },
+            { label: "Actual Event", val: "April 18" },
+            { label: "System Record", val: "March 31 (Backdated)" },
+            { label: "Manipulated Provision", val: "120,000 Pana" }
+          ],
+          type: "backdate",
+          amount: 120000,
+          correctText: "Cutoff Date Shifting! Backdating transaction entries across financial cutoff periods.",
+          kautilyaText: "AS 2.8 (Kala-harana): Date manipulation to deceive royal auditors."
+        }
+      ]
+    }
+  ];
+
+  let currentStoryIdx = 0;
+  let currentStageIdx = 0;
+  let totalFines = 0;
+  let casesCompleted = 0;
+  
+  // Track state per stage to lock out resubmissions
+  let stageCompleted = false;
+
+  function loadStage() {
+    const story = storyCases[currentStoryIdx];
+    const stage = story.stages[currentStageIdx];
+    stageCompleted = false;
+
+    // Header & Progress Updates
+    document.getElementById('caseNumDisplay').innerText = currentStoryIdx + 1;
+    document.getElementById('storyTitleDisplay').innerText = story.title;
+    document.getElementById('narrativeContainer').innerText = stage.narrative;
+
+    // Pills Update
+    for(let i=1; i<=3; i++) {
+      const pill = document.getElementById(`pill${i}`);
+      pill.className = "stage-pill";
+      if (i - 1 < currentStageIdx) {
+        pill.classList.add("completed");
+      } else if (i - 1 === currentStageIdx) {
+        pill.classList.add("active");
+      }
+    }
+
+    // Render Document Card
+    let html = `<div class="doc-card"><div class="title">${story.title} - Stage ${stage.stageNum}</div>`;
+    stage.docs.forEach(d => {
+      html += `<div class="doc-field"><span>${d.label}:</span><span class="val">${d.val}</span></div>`;
+    });
+    html += `</div>`;
+
+    document.getElementById('documentContainer').innerHTML = html;
+    document.getElementById('feedbackBox').style.display = 'none';
+    document.getElementById('anomalySelect').value = '';
+    
+    // UI Controls Reset
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = false;
+    submitBtn.innerText = "Issue Audit Finding";
+    document.getElementById('anomalySelect').disabled = false;
+    document.getElementById('nextStageBtn').classList.add('hidden');
+  }
+
+  function submitAudit() {
+    if (stageCompleted) return; // Prevent double submission
+
+    const selected = document.getElementById('anomalySelect').value;
+    const stage = storyCases[currentStoryIdx].stages[currentStageIdx];
+    const box = document.getElementById('feedbackBox');
+    const title = document.getElementById('feedbackTitle');
+    const text = document.getElementById('feedbackText');
+    const note = document.getElementById('kautilyaNote');
+
+    if (!selected) return;
+
+    box.style.display = 'block';
+
+    if (selected === stage.type) {
+      stageCompleted = true; // LOCK STAGE
+
+      // Kautilya's AS 2.8 Statutory Formula: Restitution (1x) + Statutory Fine (5x) = 6x Defrauded Amount
+      const principal = stage.amount;
+      const fine = 5 * principal;
+      const totalRecovery = principal + fine;
+      totalFines += totalRecovery;
+
+      box.className = "feedback-box correct";
+      title.innerText = "CORRECT AUDIT FINDING (LOCKED IN COURT REGISTER)";
+      text.innerText = `${stage.correctText} [Principal Defrauded: ${principal.toLocaleString()} Pana | Fine (5x): ${fine.toLocaleString()} Pana]`;
+      note.innerText = `${stage.kautilyaText} | Applied Penalty (AS 2.8): Restitution + 5x Fine = ${totalRecovery.toLocaleString()} Pana recovered into state treasury.`;
+
+      // UI Locks
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Finding Locked";
+      document.getElementById('anomalySelect').disabled = true;
+
+      document.getElementById('fineCount').innerText = `${totalFines.toLocaleString()} Pana`;
+      document.getElementById('nextStageBtn').classList.remove('hidden');
+
+    } else {
+      box.className = "feedback-box incorrect";
+      title.innerText = "INCORRECT AUDIT FINDING";
+      text.innerText = "The selected anomaly category does not match the ledger evidence for this stage.";
+      note.innerText = "Kautilya's Penalty for False Accusation (AS 2.8): Auditors leveling unverified charges face administrative reprimand.";
+    }
+  }
+
+  function advanceStage() {
+    if (currentStageIdx < 2) {
+      currentStageIdx++;
+      loadStage();
+    } else {
+      // Completed Case
+      casesCompleted++;
+      document.getElementById('caseScore').innerText = `${casesCompleted} / 10`;
+
+      if (currentStoryIdx < storyCases.length - 1) {
+        currentStoryIdx++;
+        currentStageIdx = 0;
+        loadStage();
+      } else {
+        // Master Completion
+        document.getElementById('gameArena').classList.add('hidden');
+        document.getElementById('endScreen').classList.remove('hidden');
+        document.getElementById('finalFines').innerText = `${totalFines.toLocaleString()} Pana`;
+      }
+    }
+  }
+
+  function resetGame() {
+    currentStoryIdx = 0;
+    currentStageIdx = 0;
+    totalFines = 0;
+    casesCompleted = 0;
+    document.getElementById('caseScore').innerText = "0 / 10";
+    document.getElementById('fineCount').innerText = "0 Pana";
+    document.getElementById('gameArena').classList.remove('hidden');
+    document.getElementById('endScreen').classList.add('hidden');
+    loadStage();
+  }
+
+  // Initialize Simulator
+  loadStage();
+</script>
+
+</body>
+</html>
